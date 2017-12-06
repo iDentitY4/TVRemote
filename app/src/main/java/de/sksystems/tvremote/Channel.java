@@ -5,4 +5,14 @@ package de.sksystems.tvremote;
  */
 
 public class Channel {
+    public int frequency;
+    public String id;
+    public int quality;
+    public String program;
+    public String provider;
+
+    public Channel()
+    {
+
+    }
 }

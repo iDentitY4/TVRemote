@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menuItemEasyMode"
+        android:checkable="false"
+        android:title="@string/easy_mode">
+    </item>
+    <item
+        android:id="@+id/menuItemScanChannels"
+        android:checkable="false"
+        android:onClick="onChannelScanMenuItemClicked"
+        android:title="@string/menuItemScanChannels"></item>
+</menu>
