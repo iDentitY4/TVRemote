@@ -15,4 +15,9 @@ public class Channel {
     {
 
     }
+
+    @Override
+    public String toString() {
+        return program;
+    }
 }
