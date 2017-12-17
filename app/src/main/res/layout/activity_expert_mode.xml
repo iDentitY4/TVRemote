@@ -8,7 +8,7 @@
 
     <GridLayout
         android:id="@+id/gridLayout"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
         android:padding="8dp"
@@ -73,11 +73,8 @@
 
     <GridLayout
         android:id="@+id/gridLayout2"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="0dp"
-        android:layout_marginLeft="0dp"
-        android:layout_marginRight="0dp"
         android:background="@color/colorPrimaryDark"
         android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -88,13 +85,17 @@
             android:id="@+id/btnAspectRatio"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="aspectRatioBtnClicked"
             android:text="Bildseitenverhältnis" />
 
-        <Button
+        <ToggleButton
             android:id="@+id/btnPip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Picture in Picture" />
+            android:onClick="pipBtnClicked"
+            android:text="Picture in Picture"
+            android:textOff="Pip aktivieren"
+            android:textOn="Pip deaktivieren" />
     </GridLayout>
 
 </android.support.constraint.ConstraintLayout>

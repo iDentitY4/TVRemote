@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="tvip">10.0.2.2</string>
-
-    <string name="scanChannels">scanChannels=</string>
-    <string name="channelMain">channelMain=</string>
 </resources>
