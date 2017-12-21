@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:weightSum="3">
+
+    <ToggleButton
+        android:id="@+id/btnTimeShift"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:checked="false"
+        android:drawableTop="@drawable/ic_timelapse_black_24dp"
+        android:text=""
+        android:textOff="@string/btnTimeShiftPause"
+        android:textOn="@string/btnTimeShiftResume" />
+
+    <Button
+        android:id="@+id/btnVolDec"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:drawableTop="@drawable/ic_volume_down_black_24dp"
+        android:onClick="onBtnVolDecClicked"
+        android:text="@string/btnVolDec" />
+
+    <Button
+        android:id="@+id/btnVolInc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:drawableTop="@drawable/ic_volume_up_black_24dp"
+        android:onClick="onBtnVolIncClicked"
+        android:text="@string/btnVolInc" />
+
+</LinearLayout>

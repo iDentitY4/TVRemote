@@ -1,8 +1,17 @@
 <resources>
-    <string name="app_name">TVRemote</string>
+    <string name="app_name">Fernbedienung</string>
     <string name="easy_mode">Einfacher Modus</string>
     <string name="expert_mode">Experten Modus</string>
     <string name="titleChannelSearchDlg">Sendersuchlauf</string>
     <string name="msgChannelSearchDlg">Zur verwendung der App muss ein Sendersuchlauf gestartet werden.</string>
     <string name="menuItemScanChannels">Kanalscan</string>
+
+    <string name="btnVolInc">Lauter</string>
+    <string name="btnVolDec">Leiser</string>
+
+    <string name="btnTimeShiftPause">Anhalten</string>
+    <string name="btnTimeShiftResume">Fortsetzen</string>
+
+    <string name="btnAspectRatio">Seitenverhältnis</string>
+    <string name="btnPip">Picture-in-Picture</string>
 </resources>

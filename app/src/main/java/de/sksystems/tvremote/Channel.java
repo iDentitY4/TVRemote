@@ -1,10 +1,12 @@
 package de.sksystems.tvremote;
 
+import java.io.Serializable;
+
 /**
  * Created by Manuel on 29.11.2017.
  */
 
-public class Channel {
+public class Channel implements Serializable{
     public int frequency;
     public String id;
     public int quality;

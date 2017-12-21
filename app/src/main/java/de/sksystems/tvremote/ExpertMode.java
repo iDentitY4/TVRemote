@@ -1,12 +1,21 @@
 package de.sksystems.tvremote;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ToggleButton;
 
 public class ExpertMode extends RemoteMode {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        ((ToggleButton) findViewById(R.id.btnTimeShift)).setChecked(TVDataModel.getInstance().isTimeShift());
+    }
 
     @Override
     protected int getActivityId() {
