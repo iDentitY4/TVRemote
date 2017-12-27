@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Created by Manuel on 29.11.2017.
  */
 
-public class Channel implements Serializable{
+public class Channel extends Model {
     public int frequency;
     public String id;
     public int quality;

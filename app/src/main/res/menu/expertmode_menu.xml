@@ -6,8 +6,7 @@
         android:title="@string/easy_mode">
     </item>
     <item
-        android:id="@+id/menuItemScanChannels"
+        android:id="@+id/menuItemSettings"
         android:checkable="false"
-        android:onClick="onChannelScanMenuItemClicked"
-        android:title="@string/menuItemScanChannels"></item>
+        android:title="@string/menuItemSettings"></item>
 </menu>

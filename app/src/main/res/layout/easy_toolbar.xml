@@ -12,6 +12,7 @@
         android:layout_weight="1"
         android:checked="false"
         android:drawableTop="@drawable/ic_timelapse_black_24dp"
+        android:onClick="onBtnTimeShiftClicked"
         android:text=""
         android:textOff="@string/btnTimeShiftPause"
         android:textOn="@string/btnTimeShiftResume" />

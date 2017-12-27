@@ -5,6 +5,7 @@
     <string name="titleChannelSearchDlg">Sendersuchlauf</string>
     <string name="msgChannelSearchDlg">Zur verwendung der App muss ein Sendersuchlauf gestartet werden.</string>
     <string name="menuItemScanChannels">Kanalscan</string>
+    <string name="menuItemSettings">Einstellungen</string>
 
     <string name="btnVolInc">Lauter</string>
     <string name="btnVolDec">Leiser</string>
@@ -14,4 +15,18 @@
 
     <string name="btnAspectRatio">Seitenverhältnis</string>
     <string name="btnPip">Picture-in-Picture</string>
+    <string name="title_activity_settings">Einstellungen</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example TV settings -->
+    <string name="pref_header_tv">Fernseher</string>
+    <string name="pref_title_ip">IP Adresse</string>
+    <string name="pref_default_tv_ip">10.0.2.2</string>
+
+    <!-- Example settings for channels -->
+    <string name="pref_header_channels">Kanäle</string>
+    <string name="pref_title_scan_channels">Kanalscan durchführen</string>
+
+
 </resources>

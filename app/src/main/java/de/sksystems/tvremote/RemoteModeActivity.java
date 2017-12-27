@@ -1,12 +1,11 @@
 package de.sksystems.tvremote;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.support.annotation.LayoutRes;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -17,12 +16,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ToggleButton;
 
-import java.util.ArrayList;
-import java.util.List;
+public abstract class RemoteModeActivity extends AppCompatActivity {
 
-public abstract class RemoteMode extends AppCompatActivity {
-
-    protected Remote remote;
+    protected RemoteController remote;
 
     protected ListView channelList;
 
@@ -32,9 +28,11 @@ public abstract class RemoteMode extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.i("TVRemote", "RemoteModeActivity.onCreate()");
+
         checkFirstRun();
 
-        remote = new Remote(this);
+        remote = new RemoteController(this);
 
         setContentView(getActivityId());
         channelList = (ListView) findViewById(R.id.listChannels);
@@ -57,12 +55,16 @@ public abstract class RemoteMode extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
 
+        Log.i("TVRemote", "RemoteModeActivity.onPause()");
+
         TVDataModel.save(getApplicationContext());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        Log.i("TVRemote", "RemoteModeActivity.onResume()");
 
         TVDataModel.load(getApplicationContext());
         channelListAdapter = new ArrayAdapter<Channel>(this, R.layout.channel, remote.getChannels());
@@ -134,6 +136,12 @@ public abstract class RemoteMode extends AppCompatActivity {
     {
         if(v instanceof ToggleButton) {
             remote.showPip(((ToggleButton) v).isChecked());
+        }
+    }
+
+    public void onBtnTimeShiftClicked(View v) {
+        if(v instanceof ToggleButton) {
+            remote.timeShift(((ToggleButton) v).isChecked());
         }
     }
 }

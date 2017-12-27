@@ -1,15 +1,10 @@
 package de.sksystems.tvremote;
 
-import android.content.Intent;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-
 /**
  * Created by Manuel on 06.12.2017.
  */
 
-public class FavMode extends RemoteMode {
+public class FavMode extends RemoteModeActivity {
 
     @Override
     protected int getActivityId() {

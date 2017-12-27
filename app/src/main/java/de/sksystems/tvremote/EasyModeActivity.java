@@ -1,31 +1,25 @@
 package de.sksystems.tvremote;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.ToggleButton;
 
-public class ExpertMode extends RemoteMode {
+/**
+ * Created by Manuel on 06.12.2017.
+ */
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        ((ToggleButton) findViewById(R.id.btnTimeShift)).setChecked(TVDataModel.getInstance().isTimeShift());
-    }
+public class EasyModeActivity extends RemoteModeActivity {
 
     @Override
     protected int getActivityId() {
-        return R.layout.activity_expert_mode;
+        return R.layout.activity_easy_mode;
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.expertmode_menu, menu);
+        inflater.inflate(R.menu.easymode_menu, menu);
         return true;
     }
 
@@ -33,9 +27,9 @@ public class ExpertMode extends RemoteMode {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId())
         {
-            case R.id.menuItemEasyMode:
+            case R.id.menuItemExpertMode:
             {
-                Intent intent = new Intent(this, EasyMode.class);
+                Intent intent = new Intent(this, ExpertModeActivity.class);
                 startActivity(intent);
                 return true;
             }

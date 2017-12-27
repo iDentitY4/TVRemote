@@ -17,7 +17,7 @@ import java.util.List;
  * Created by Manuel on 17.12.2017.
  */
 
-public class TVDataModel implements Serializable {
+public class TVDataModel extends Model {
 
     private static TVDataModel instance;
 

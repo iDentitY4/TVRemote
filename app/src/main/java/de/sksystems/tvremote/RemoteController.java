@@ -5,25 +5,25 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.widget.ListAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Manuel on 07.12.2017.
  */
 
-public class Remote {
+public class RemoteController {
+
+    public static final int HTTP_REQUEST_TIMEOUT = 6000;
 
     protected Context context;
 
-    public Remote(Context context) {
+    public RemoteController(Context context) {
         this.context = context;
     }
 
@@ -83,9 +83,17 @@ public class Remote {
 
     private class HttpRequestAsync extends AsyncTask<String, Integer, Void> {
 
-        private ProgressDialog dialog = new ProgressDialog(Remote.this.context);
+        private ProgressDialog dialog;
+        private HttpRequest httpHandler;
 
-        private HttpRequest httpHandler = new HttpRequest("10.0.2.2", 6000, true);
+        private Exception error = null;
+
+        public HttpRequestAsync() {
+            dialog = new ProgressDialog(RemoteController.this.context);
+
+            String ip = RemoteController.this.context.getSharedPreferences("PREFERENCE", Context.MODE_PRIVATE).getString("tv_ip", "10.0.2.2");
+            httpHandler = new HttpRequest(ip, HTTP_REQUEST_TIMEOUT, false);
+        }
 
         @Override
         protected void onPreExecute() {
@@ -101,13 +109,7 @@ public class Remote {
                 try {
                     result = httpHandler.execute(s);
                 } catch (IOException | JSONException | IllegalArgumentException e) {
-                    e.printStackTrace();
-
-                /*new AlertDialog.Builder(Remote.this.context)
-                    .setTitle("Fehler")
-                    .setMessage(e.getMessage())
-                    .setNeutralButton("OK", null)
-                    .show();*/
+                    error = e;
                 }
 
                 if (s.startsWith("scanChannels=") && result != null) {
@@ -122,16 +124,11 @@ public class Remote {
                             channel.quality = jChannel.getInt("quality");
                             channel.program = jChannel.getString("program");
                             channel.provider = jChannel.getString("provider");
+
                             TVDataModel.getInstance().addChannel(channel);
                         }
                     } catch (JSONException ex) {
-                        ex.printStackTrace();
-
-                        /*new AlertDialog.Builder(Remote.this.context)
-                                .setTitle("Fehler")
-                                .setMessage(ex.getMessage())
-                                .setNeutralButton("OK", null)
-                                .show();*/
+                        error = ex;
                     }
                 }
             }
@@ -147,9 +144,21 @@ public class Remote {
                 dialog.dismiss();
             }
 
-            Log.i("TVRemote", "Http request finished");
-            if(Remote.this.context instanceof RemoteMode) {
-                ((RemoteMode) Remote.this.context).notifyAdapterDataChanged();
+            if(error != null) {
+                error.printStackTrace();
+
+                new AlertDialog.Builder(RemoteController.this.context)
+                        .setTitle("Ein Fehler ist aufgetreten")
+                        .setMessage(error.getMessage())
+                        .setNeutralButton("OK", null)
+                        .show();
+            }
+            else {
+                Log.i("TVRemote", "Http request finished");
+
+                if (RemoteController.this.context instanceof RemoteModeActivity) {
+                    ((RemoteModeActivity) RemoteController.this.context).notifyAdapterDataChanged();
+                }
             }
         }
     }
