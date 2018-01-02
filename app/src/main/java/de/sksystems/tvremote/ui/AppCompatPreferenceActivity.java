@@ -1,4 +1,4 @@
-package de.sksystems.tvremote;
+package de.sksystems.tvremote.ui;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

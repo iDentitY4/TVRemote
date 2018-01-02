@@ -1,6 +1,7 @@
-package de.sksystems.tvremote;
+package de.sksystems.tvremote.ui;
 
 import android.annotation.TargetApi;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -8,12 +9,31 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.SwitchPreference;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+
+import de.sksystems.tvremote.http.HttpRequestAsync;
+import de.sksystems.tvremote.R;
+import de.sksystems.tvremote.RemoteController;
+import de.sksystems.tvremote.dao.ChannelDao;
+import de.sksystems.tvremote.db.AppDatabase;
+import de.sksystems.tvremote.entity.Channel;
+import de.sksystems.tvremote.ui.component.LoadingPreference;
+import de.sksystems.tvremote.ui.component.ScanChannelsTaskFragment;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -75,25 +95,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-        TVDataModel.getInstance().load(this);
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        TVDataModel.getInstance().save(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        TVDataModel.getInstance().load(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        TVDataModel.getInstance().save(this);
     }
 
     /**
@@ -163,6 +180,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("tv_ip"));
+            bindPreferenceSummaryToValue(findPreference("tv_timeout"));
+
+            SwitchPreference mDebugMode = (SwitchPreference) findPreference("tv_debugmode");
+            mDebugMode.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object o) {
+                    RemoteController.getInstance(getContext()).debug((Boolean) o);
+                    return true;
+                }
+            });
+
         }
 
         @Override
@@ -182,19 +210,31 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class ChannelsPreferenceFragment extends PreferenceFragment {
+        private ScanChannelsTaskFragment task;
+        private final String taskTag = "channelscan_fragment";
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_channels);
             setHasOptionsMenu(true);
 
-            Preference channelScanBtn = findPreference("scan_channels");
-            channelScanBtn.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            final FragmentManager fm = this.getFragmentManager();
+            task = (ScanChannelsTaskFragment) fm.findFragmentByTag(taskTag);
+
+            final LoadingPreference channelScan = (LoadingPreference) findPreference("scan_channels");
+            channelScan.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-
-                    new RemoteController(getContext()).scanChannels();
-                    return true;
+                    if(task == null) {
+                        task = new ScanChannelsTaskFragment();
+                        fm.beginTransaction().add(task, taskTag).commit();
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             });
         }

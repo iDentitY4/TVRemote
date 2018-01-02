@@ -6,7 +6,13 @@
         android:title="@string/easy_mode">
     </item>
     <item
+        android:id="@+id/menuItemFavorites"
+        android:checkable="false"
+        android:title="@string/menuItemFavorites">
+    </item>
+    <item
         android:id="@+id/menuItemSettings"
         android:checkable="false"
-        android:title="@string/menuItemSettings"></item>
+        android:title="@string/menuItemSettings">
+    </item>
 </menu>

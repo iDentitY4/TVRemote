@@ -4,59 +4,34 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="de.sksystems.tvremote.ExpertModeActivity">
-
-    <ListView
-        android:id="@+id/listChannels"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/easy_toolbar"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:listitem="@layout/channel" />
+    tools:context="de.sksystems.tvremote.ui.ExpertModeActivity">
 
     <include
-        android:id="@+id/easy_toolbar"
-        layout="@layout/easy_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/expert_toolbar" />
+        android:id="@+id/channel_list"
+        layout="@layout/channel_list"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/control_bar_easy"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:id="@+id/expert_toolbar"
+    <fragment
+        android:name="de.sksystems.tvremote.ui.RemoteModeActivity$ControlBarFragment"
+        android:id="@+id/control_bar_easy"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:orientation="horizontal"
-        android:weightSum="2"
+        app:layout_constraintBottom_toTopOf="@+id/control_bar_expert"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <fragment
+        android:name="de.sksystems.tvremote.ui.ExpertModeActivity$AdvancedControlBarFragment"
+        android:id="@+id/control_bar_expert"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <Button
-            android:id="@+id/btnAspectRatio"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/ic_aspect_ratio_black_24dp"
-            android:onClick="aspectRatioBtnClicked"
-            android:text="@string/btnAspectRatio"
-            android:textSize="12sp" />
-
-        <ToggleButton
-            android:id="@+id/btnPip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/ic_picture_in_picture_black_24dp"
-            android:onClick="pipBtnClicked"
-            android:text="@string/btnPip"
-            android:textOff="@string/btnPip"
-            android:textOn="@string/btnPip"
-            android:textSize="12sp" />
-
-    </LinearLayout>
+        app:layout_constraintStart_toStartOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

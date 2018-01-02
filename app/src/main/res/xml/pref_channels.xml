@@ -1,7 +1,15 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <Preference android:title="@string/pref_title_scan_channels"
+    <de.sksystems.tvremote.ui.component.LoadingPreference
+        android:title="@string/pref_title_scan_channels"
         android:key="scan_channels"
-        android:summary="This is a cool button"/>
+        android:summary="Erneuern aller Kanäle. Kann mehrere Sekunden dauern." />
+
+    <SwitchPreference
+        android:title="@string/pref_title_fav_only"
+        android:key="fav_only"
+        android:summary="@string/pref_summary_fav_only"
+        android:defaultValue="false" />
+
 
 </PreferenceScreen>

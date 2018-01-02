@@ -6,6 +6,9 @@
     <string name="msgChannelSearchDlg">Zur verwendung der App muss ein Sendersuchlauf gestartet werden.</string>
     <string name="menuItemScanChannels">Kanalscan</string>
     <string name="menuItemSettings">Einstellungen</string>
+    <string name="menuItemFavorites">Favoriten</string>
+
+    <string name="channelNotFound">Keine Kanalbeschreibung vorhanden</string>
 
     <string name="btnVolInc">Lauter</string>
     <string name="btnVolDec">Leiser</string>
@@ -17,6 +20,8 @@
     <string name="btnPip">Picture-in-Picture</string>
     <string name="title_activity_settings">Einstellungen</string>
 
+    <string name="btnConfirm">Speichern</string>
+
     <!-- Strings related to Settings -->
 
     <!-- Example TV settings -->
@@ -24,9 +29,17 @@
     <string name="pref_title_ip">IP Adresse</string>
     <string name="pref_default_tv_ip">10.0.2.2</string>
 
+    <string name="pref_title_timeout">HTTP Timeout (in Millisekunden)</string>
+    <string name="pref_default_timeout">6000</string>
+    <string name="pref_summary_timeout">Wie lange soll versucht werden eine Verbindung zum Fernseher herzustellen.</string>
+
+    <string name="pref_title_debug">Debug Modus</string>
+    <string name="pref_summary_debug">Erweiterte Informationen auf dem Fernseher anzeigen</string>
+
     <!-- Example settings for channels -->
     <string name="pref_header_channels">Kanäle</string>
     <string name="pref_title_scan_channels">Kanalscan durchführen</string>
-
+    <string name="pref_title_fav_only">Nur Favoriten anzeigen</string>
+    <string name="pref_summary_fav_only">Nur noch Favoriten in der Kanalliste anzeigen lassen. Nicht-Favoriten werden ausgeblendet.</string>
 
 </resources>

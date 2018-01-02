@@ -1,17 +1,26 @@
 package de.sksystems.tvremote;
 
-import android.app.ProgressDialog;
+import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.widget.Toast;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+import de.sksystems.tvremote.entity.Channel;
+import de.sksystems.tvremote.dao.ChannelDao;
+import de.sksystems.tvremote.db.AppDatabase;
+import de.sksystems.tvremote.http.HttpRequestAsync;
+import de.sksystems.tvremote.http.HttpRequestParamTask;
 
 /**
  * Created by Manuel on 07.12.2017.
@@ -19,59 +28,171 @@ import java.util.List;
 
 public class RemoteController {
 
-    public static final int HTTP_REQUEST_TIMEOUT = 6000;
+    private static final String TV_STATE_FILENAME = "TV_STATE";
 
-    protected Context context;
+    private static RemoteController instance;
 
-    public RemoteController(Context context) {
-        this.context = context;
+    public static RemoteController getInstance(Context context) {
+        if(instance == null) {
+            instance = new RemoteController(context);
+        }
+        else {
+            instance.setContext(context);
+        }
+
+        return instance;
+    }
+
+    protected Context mContext;
+
+    protected AppDatabase mDb;
+
+    protected TVState tvState;
+
+    protected HttpRequestAsync mRunningTask = null;
+
+    private RemoteController(Context context) {
+        mContext = context;
+        mDb = Room.databaseBuilder(mContext.getApplicationContext(),
+                AppDatabase.class, "tvremote-db").build();
+
+        tvState = loadLastState();
+    }
+
+    public TVState getTVState() {
+        return tvState;
+    }
+
+    private TVState loadLastState() {
+        TVState state = null;
+        try {
+            FileInputStream fis = mContext.openFileInput(TV_STATE_FILENAME);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+
+            Log.i("TVRemote", "Trying to load TV state from file");
+
+            state = (TVState) ois.readObject();
+
+            ois.close();
+            fis.close();
+        }
+        catch(IOException | ClassNotFoundException ex)
+        {
+            ex.printStackTrace();
+        }
+
+        if(state == null) {
+            //No state file found, assume fresh tv state
+            state = new TVState();
+        }
+
+        return state;
+    }
+
+    public void storeTVState() {
+        try {
+            FileOutputStream fos = mContext.openFileOutput(TV_STATE_FILENAME, Context.MODE_PRIVATE);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+
+            Log.i("TVRemote", "Saving TV state to file");
+
+            oos.writeObject(tvState);
+            oos.flush();
+            oos.close();
+            fos.close();
+        }
+        catch(IOException ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+
+    public HttpRequestAsync getRunningTask() {
+        if(mRunningTask != null && mRunningTask.getStatus() == AsyncTask.Status.FINISHED) {
+            mRunningTask = null;
+        }
+        return mRunningTask;
+    }
+
+    public void setContext(Context context) {
+        mContext = context;
+    }
+
+    public Context getContext() {
+        return mContext;
+    }
+
+    private ChannelDao channelDao() {
+        return mDb.channelDao();
     }
 
     private void httpRequest(String request) {
-        new HttpRequestAsync().execute(request);
+        if(mRunningTask == null) {
+            mRunningTask = new HttpRequestParamTask(mContext);
+            mRunningTask.addRequestListener(new HttpRequestAsync.RequestListener() {
+                @Override
+                public void onBegin() {
+
+                }
+
+                @Override
+                public void onEnd() {
+                    mRunningTask = null;
+                }
+            });
+            mRunningTask.execute(new String[]{request});
+        }
+        else
+        {
+            Toast.makeText(mContext, "Bitte warten...", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    public void scanChannels() {
-        httpRequest("scanChannels=");
-    }
-
-    public List<Channel> getChannels() {
-        return TVDataModel.getInstance().getChannels();
-    }
-
-    public void selectChannel(int position) {
-        if (TVDataModel.getInstance().isPip()) {
-            httpRequest("channelPip=" + TVDataModel.getInstance().getChannel(position).id);
+    public void selectChannel(Channel channel) {
+        if (tvState.pip) {
+            httpRequest("channelPip=" + channel.getChannel());
         } else {
-            httpRequest("channelMain=" + TVDataModel.getInstance().getChannel(position).id);
+            httpRequest("channelMain=" + channel.getChannel());
         }
     }
 
     public void zoomMain() {
-        if (TVDataModel.getInstance().isPip()) {
-            httpRequest("zoomPip=" + (TVDataModel.getInstance().isPipZoom() ? 1 : 0));
-            TVDataModel.getInstance().setPipZoom(!TVDataModel.getInstance().isPipZoom());
+        if (tvState.pip) {
+            httpRequest("zoomPip=" + (tvState.pip ? 1 : 0));
+            tvState.pipZoom = !tvState.pipZoom;
         } else {
-            httpRequest("zoomMain=" + (TVDataModel.getInstance().isZoom() ? 1 : 0));
-            TVDataModel.getInstance().setZoom(!TVDataModel.getInstance().isZoom());
+            httpRequest("zoomMain=" + (tvState.zoom ? 1 : 0));
+            tvState.zoom = !tvState.zoom;
         }
     }
 
     public void showPip(boolean show) {
-        TVDataModel.getInstance().setPip(show);
+        tvState.pip = show;
         httpRequest("showPip=" + (show ? 1 : 0));
     }
 
     public void increaseVolume() {
-        httpRequest("volume=" + TVDataModel.getInstance().increaseVolume());
+        tvState.volume += 10;
+
+        if(tvState.volume >= 100) {
+            tvState.volume = 100;
+        }
+
+        httpRequest("volume=" + tvState.volume);
     }
 
     public void decreaseVolume() {
-        httpRequest("volume=" + TVDataModel.getInstance().decreaseVolume());
+        tvState.volume -= 10;
+
+        if(tvState.volume < 0) {
+            tvState.volume = 0;
+        }
+
+        httpRequest("volume=" + tvState.volume);
     }
 
     public void timeShift(boolean on) {
-        TVDataModel.getInstance().setTimeShift(on);
+        tvState.timeShift = on;
         if(on) {
             httpRequest("timeShiftPause=");
         }
@@ -81,85 +202,50 @@ public class RemoteController {
         }
     }
 
-    private class HttpRequestAsync extends AsyncTask<String, Integer, Void> {
+    public void debug(boolean on) {
+        tvState.debug = on;
+        httpRequest("debug=" + (tvState.debug ? 1 : 0));
+    }
 
-        private ProgressDialog dialog;
-        private HttpRequest httpHandler;
+    public static class TVState implements Serializable {
+        boolean zoom;
+        boolean pip;
+        boolean pipZoom;
+        int volume;
+        boolean timeShift;
+        boolean debug;
 
-        private Exception error = null;
-
-        public HttpRequestAsync() {
-            dialog = new ProgressDialog(RemoteController.this.context);
-
-            String ip = RemoteController.this.context.getSharedPreferences("PREFERENCE", Context.MODE_PRIVATE).getString("tv_ip", "10.0.2.2");
-            httpHandler = new HttpRequest(ip, HTTP_REQUEST_TIMEOUT, false);
+        TVState() {
+            zoom = false;
+            pip = false;
+            pipZoom = false;
+            volume = 0;
+            timeShift = false;
+            debug = false;
         }
 
-        @Override
-        protected void onPreExecute() {
-            this.dialog.setMessage("Wird geladen...");
-            this.dialog.show();
+        public boolean isZoom() {
+            return zoom;
         }
 
-        @Override
-        protected Void doInBackground(String... strings) {
-
-            for (String s : strings) {
-                JSONObject result = null;
-                try {
-                    result = httpHandler.execute(s);
-                } catch (IOException | JSONException | IllegalArgumentException e) {
-                    error = e;
-                }
-
-                if (s.startsWith("scanChannels=") && result != null) {
-                    try {
-                        JSONArray channelArray = result.getJSONArray("channels");
-
-                        for (int i = 0; i < channelArray.length(); i++) {
-                            JSONObject jChannel = channelArray.getJSONObject(i);
-                            Channel channel = new Channel();
-                            channel.frequency = jChannel.getInt("frequency");
-                            channel.id = jChannel.getString("channel");
-                            channel.quality = jChannel.getInt("quality");
-                            channel.program = jChannel.getString("program");
-                            channel.provider = jChannel.getString("provider");
-
-                            TVDataModel.getInstance().addChannel(channel);
-                        }
-                    } catch (JSONException ex) {
-                        error = ex;
-                    }
-                }
-            }
-
-            return null;
+        public boolean isPip() {
+            return pip;
         }
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+        public boolean isPipZoom() {
+            return pipZoom;
+        }
 
-            if(dialog.isShowing()) {
-                dialog.dismiss();
-            }
+        public int getVolume() {
+            return volume;
+        }
 
-            if(error != null) {
-                error.printStackTrace();
+        public boolean isTimeShift() {
+            return timeShift;
+        }
 
-                new AlertDialog.Builder(RemoteController.this.context)
-                        .setTitle("Ein Fehler ist aufgetreten")
-                        .setMessage(error.getMessage())
-                        .setNeutralButton("OK", null)
-                        .show();
-            }
-            else {
-                Log.i("TVRemote", "Http request finished");
-
-                if (RemoteController.this.context instanceof RemoteModeActivity) {
-                    ((RemoteModeActivity) RemoteController.this.context).notifyAdapterDataChanged();
-                }
-            }
+        public boolean isDebug() {
+            return debug;
         }
     }
 }

@@ -1,9 +1,11 @@
-package de.sksystems.tvremote;
+package de.sksystems.tvremote.ui;
 
 import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import de.sksystems.tvremote.R;
 
 /**
  * Created by Manuel on 06.12.2017.

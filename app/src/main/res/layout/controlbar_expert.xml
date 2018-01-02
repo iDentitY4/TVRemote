@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/windowBackground"
+    android:orientation="horizontal"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent">
+
+    <Button
+        android:id="@+id/control_aspect"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:drawableTop="@drawable/ic_aspect_ratio_black_24dp"
+        android:onClick="onAdvancedControlBarItemClick"
+        android:text="@string/btnAspectRatio" />
+
+    <ToggleButton
+        android:id="@+id/control_pip"
+        style="@style/Base.Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:drawableTop="@drawable/control_toggle_pip"
+        android:onClick="onAdvancedControlBarItemClick"
+        android:textOff="@string/btnPip"
+        android:textOn="@string/btnPip" />
+
+
+</LinearLayout>

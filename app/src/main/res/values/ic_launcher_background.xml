@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="tvip">10.0.2.2</string>
+    <color name="ic_launcher_background">#C5CAE9</color>
 </resources>

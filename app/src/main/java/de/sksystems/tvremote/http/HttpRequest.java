@@ -15,7 +15,7 @@
  * @version     1.3, 2015-12-03
  */
 
-package de.sksystems.tvremote;
+package de.sksystems.tvremote.http;
 
 import android.os.NetworkOnMainThreadException;
 import android.os.StrictMode;
