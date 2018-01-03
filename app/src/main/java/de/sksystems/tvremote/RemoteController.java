@@ -2,7 +2,9 @@ package de.sksystems.tvremote;
 
 import android.arch.persistence.room.Room;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -45,6 +47,8 @@ public class RemoteController {
 
     protected Context mContext;
 
+    protected SharedPreferences mPreferences;
+
     protected AppDatabase mDb;
 
     protected TVState tvState;
@@ -55,6 +59,7 @@ public class RemoteController {
         mContext = context;
         mDb = Room.databaseBuilder(mContext.getApplicationContext(),
                 AppDatabase.class, "tvremote-db").build();
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
         tvState = loadLastState();
     }
@@ -122,13 +127,12 @@ public class RemoteController {
         return mContext;
     }
 
-    private ChannelDao channelDao() {
-        return mDb.channelDao();
-    }
-
     private void httpRequest(String request) {
         if(mRunningTask == null) {
-            mRunningTask = new HttpRequestParamTask(mContext);
+            String ip = mPreferences.getString(SharedPreferencesKeys.TV.IP, null);
+            int timeout = Integer.parseInt(mPreferences.getString(SharedPreferencesKeys.TV.TIMEOUT, "6000"));
+
+            mRunningTask = new HttpRequestParamTask(ip, timeout);
             mRunningTask.addRequestListener(new HttpRequestAsync.RequestListener() {
                 @Override
                 public void onBegin() {
@@ -136,8 +140,14 @@ public class RemoteController {
                 }
 
                 @Override
-                public void onEnd() {
+                public void onSuccess() {
                     mRunningTask = null;
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    mRunningTask = null;
+                    Toast.makeText(mContext, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 }
             });
             mRunningTask.execute(new String[]{request});

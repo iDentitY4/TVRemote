@@ -38,7 +38,7 @@ public class EditFavouritesActivity extends AppCompatActivity {
             public void onChanged(@Nullable final List<Channel> channels) {
                 mListAdapter = new ChannelFavoritesAdapter(EditFavouritesActivity.this, channels);
                 mFavlist.setAdapter(mListAdapter);
-                Toast.makeText(EditFavouritesActivity.this, "Loaded " + channels.size() + " channels", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(EditFavouritesActivity.this, "Loaded " + channels.size() + " channels", Toast.LENGTH_SHORT).show();
             }
         };
 

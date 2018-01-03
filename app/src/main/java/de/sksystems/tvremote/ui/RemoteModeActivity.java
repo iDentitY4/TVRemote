@@ -13,27 +13,29 @@ import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.util.List;
 
 import de.sksystems.tvremote.ChannelListViewModel;
 import de.sksystems.tvremote.SharedPreferencesKeys;
+import de.sksystems.tvremote.http.HttpRequestAsync;
 import de.sksystems.tvremote.ui.adapter.ChannelRecyclerAdapter;
 import de.sksystems.tvremote.R;
 import de.sksystems.tvremote.RemoteController;
-import de.sksystems.tvremote.db.AppDatabase;
 import de.sksystems.tvremote.entity.Channel;
-import de.sksystems.tvremote.ui.component.IpAddressDialogFragment;
+import de.sksystems.tvremote.ui.component.SetupDialogFragment;
 import de.sksystems.tvremote.util.FragmentClickHandler;
 
-public abstract class RemoteModeActivity extends AppCompatActivity {
+public abstract class RemoteModeActivity extends AppCompatActivity implements SetupDialogFragment.SetupCompletedListener{
 
     SharedPreferences mPreferences;
 
@@ -49,11 +51,31 @@ public abstract class RemoteModeActivity extends AppCompatActivity {
         public void onChanged(@Nullable final List<Channel> channels) {
             mAdapter = new ChannelRecyclerAdapter(channels);
             mRecyclerView.setAdapter(mAdapter);
+            mAdapter.notifyDataSetChanged();
         }
     };
 
     FragmentClickHandler mControlBarClickHandler;
-    FragmentClickHandler mIpAddressDialogClickHandler;
+
+    private boolean mSetup = false;
+    private SetupDialogFragment mSetupFragment;
+
+    protected HttpRequestAsync.RequestListener mRequestListener = new HttpRequestAsync.RequestListener() {
+        @Override
+        public void onBegin() {
+
+        }
+
+        @Override
+        public void onSuccess() {
+
+        }
+
+        @Override
+        public void onFailure(Exception e) {
+            Toast.makeText(RemoteModeActivity.this, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,13 +86,7 @@ public abstract class RemoteModeActivity extends AppCompatActivity {
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         if(mPreferences.getString(SharedPreferencesKeys.TV.IP, null) == null) {
-            IpAddressDialogFragment dialog = new IpAddressDialogFragment();
-
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            transaction.add(android.R.id.content, dialog).addToBackStack(null).commit();
-
-            mIpAddressDialogClickHandler = dialog;
+            doSetup();
         }
 
         mRecyclerView = findViewById(R.id.channel_list);
@@ -88,7 +104,7 @@ public abstract class RemoteModeActivity extends AppCompatActivity {
 
         mRemoteControl = RemoteController.getInstance(this);
         if(mRemoteControl.getRunningTask() != null) {
-            mRemoteControl.getRunningTask().attach(this);
+            mRemoteControl.getRunningTask().addRequestListener(mRequestListener);
         }
 
         mControlBarClickHandler = (ControlBarFragment) getFragmentManager().findFragmentById(R.id.control_bar_easy);
@@ -115,6 +131,10 @@ public abstract class RemoteModeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        if(mRemoteControl.getRunningTask() != null) {
+            mRemoteControl.getRunningTask().removeRequestListener(mRequestListener);
+        }
     }
 
     protected abstract @LayoutRes int getActivityId();
@@ -126,13 +146,44 @@ public abstract class RemoteModeActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    public void doSetup() {
+        mSetup = true;
+        mSetupFragment = new SetupDialogFragment();
+
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        transaction.add(android.R.id.content, mSetupFragment).addToBackStack(null).commit();
+
+        getSupportActionBar().hide();
+    }
+
+    @Override
+    public void onSetupCompleted() {
+        mSetup = false;
+        getFragmentManager().beginTransaction().remove(mSetupFragment).commit();
+        getSupportActionBar().show();
+
+        //Reload the activity
+        finish();
+        startActivity(getIntent());
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(mSetup) {
+            Toast.makeText(this, "Bitte das Setup abschließen.", Toast.LENGTH_SHORT).show();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     public void onControlBarItemClick(View v) {
         mControlBarClickHandler.onClick(v);
     }
 
-    public void onIpAddressDialogFragmentClick(View v) {
-        if(mIpAddressDialogClickHandler != null) {
-            mIpAddressDialogClickHandler.onClick(v);
+    public void onSetupDialogFragmentClick(View v) {
+        if(mSetupFragment != null) {
+            mSetupFragment.onClick(v);
         }
     }
 

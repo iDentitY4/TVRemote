@@ -1,7 +1,5 @@
 package de.sksystems.tvremote.http;
 
-import android.content.Context;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,8 +11,8 @@ import java.io.IOException;
 
 public class HttpRequestParamTask extends HttpRequestAsync<String, Integer, Void> {
 
-    public HttpRequestParamTask(Context context) {
-        super(context);
+    public HttpRequestParamTask(String ip, int timeout) {
+        super(ip, timeout);
     }
 
     @Override
@@ -29,14 +27,5 @@ public class HttpRequestParamTask extends HttpRequestAsync<String, Integer, Void
             }
         }
         return null;
-    }
-
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
-
-        if(mError != null) {
-            evalError();
-        }
     }
 }

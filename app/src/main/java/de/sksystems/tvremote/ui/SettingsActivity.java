@@ -4,17 +4,21 @@ import android.annotation.TargetApi;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
+import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -26,12 +30,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.sksystems.tvremote.SharedPreferencesKeys;
 import de.sksystems.tvremote.http.HttpRequestAsync;
 import de.sksystems.tvremote.R;
 import de.sksystems.tvremote.RemoteController;
 import de.sksystems.tvremote.dao.ChannelDao;
 import de.sksystems.tvremote.db.AppDatabase;
 import de.sksystems.tvremote.entity.Channel;
+import de.sksystems.tvremote.http.HttpRequestScanChannelTask;
 import de.sksystems.tvremote.ui.component.LoadingPreference;
 import de.sksystems.tvremote.ui.component.ScanChannelsTaskFragment;
 
@@ -210,8 +216,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class ChannelsPreferenceFragment extends PreferenceFragment {
-        private ScanChannelsTaskFragment task;
-        private final String taskTag = "channelscan_fragment";
+        private HttpRequestScanChannelTask task;
+
+        private ProgressBar progress;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -219,16 +226,35 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_channels);
             setHasOptionsMenu(true);
 
-            final FragmentManager fm = this.getFragmentManager();
-            task = (ScanChannelsTaskFragment) fm.findFragmentByTag(taskTag);
-
             final LoadingPreference channelScan = (LoadingPreference) findPreference("scan_channels");
+
             channelScan.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     if(task == null) {
-                        task = new ScanChannelsTaskFragment();
-                        fm.beginTransaction().add(task, taskTag).commit();
+                        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getContext());
+                        String ip = pref.getString(SharedPreferencesKeys.TV.IP, null);
+                        int timeout = Integer.parseInt(pref.getString(SharedPreferencesKeys.TV.TIMEOUT, "6000"));
+
+                        task = new HttpRequestScanChannelTask(AppDatabase.getDatabase(getContext()), ip, timeout);
+                        task.addRequestListener(new HttpRequestAsync.RequestListener() {
+                            @Override
+                            public void onBegin() {
+                                progress.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onSuccess() {
+                                progress.setVisibility(View.GONE);
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                progress.setVisibility(View.GONE);
+                                Toast.makeText(getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        task.execute(new Void[]{});
                         return true;
                     }
                     else
@@ -237,6 +263,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     }
                 }
             });
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            View v = super.onCreateView(inflater, container, savedInstanceState);
+            progress = v.findViewById(R.id.progress);
+            return v;
         }
 
         @Override

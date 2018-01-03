@@ -21,10 +21,9 @@ public abstract class HttpRequestAsync<Params, Progress, Result> extends AsyncTa
 
     public interface RequestListener {
         void onBegin();
-        void onEnd();
+        void onSuccess();
+        void onFailure(Exception e);
     }
-
-    protected Context mContext;
 
     protected HttpRequest http;
 
@@ -32,24 +31,19 @@ public abstract class HttpRequestAsync<Params, Progress, Result> extends AsyncTa
 
     private List<RequestListener> mListeners;
 
-    public HttpRequestAsync(Context context) {
+    public HttpRequestAsync(String ip, int timeout) {
         super();
-        mContext = context;
-        http = new HttpRequest(getIp(), getTimeout(), false);
+        http = new HttpRequest(ip, timeout, false);
         mError = null;
         mListeners = new ArrayList<>();
     }
 
-    public void attach(Context context) {
-        mContext = context;
-    }
-
-    public void detach() {
-        mContext = null;
-    }
-
     public void addRequestListener(RequestListener listener) {
         mListeners.add(listener);
+    }
+
+    public void removeRequestListener(RequestListener listener) {
+        mListeners.remove(listener);
     }
 
     @Override
@@ -63,12 +57,19 @@ public abstract class HttpRequestAsync<Params, Progress, Result> extends AsyncTa
     @Override
     protected void onPostExecute(Result result) {
         super.onPostExecute(result);
-        for(RequestListener l : mListeners) {
-            l.onEnd();
+
+        if(mError == null) {
+            for(RequestListener l : mListeners) {
+                l.onSuccess();
+            }
+        } else {
+            for(RequestListener l : mListeners) {
+                l.onFailure(mError);
+            }
         }
     }
 
-    public void evalError() {
+    /*public void evalError() {
         if(mError instanceof IOException) {
             alert("Verbindung zum Fernseher konnte nicht hergestellt werden", mError.getMessage());
         }
@@ -76,25 +77,13 @@ public abstract class HttpRequestAsync<Params, Progress, Result> extends AsyncTa
         {
             alert("Ein Fehler ist aufgetreten", mError.getMessage());
         }
-    }
+    }*/
 
-    public SharedPreferences getSharedPreferences() {
-        return PreferenceManager.getDefaultSharedPreferences(mContext);
-    }
-
-    public String getIp() {
-        return getSharedPreferences().getString(SharedPreferencesKeys.TV.IP,null);
-    }
-
-    public int getTimeout() {
-        return Integer.parseInt(getSharedPreferences().getString(SharedPreferencesKeys.TV.TIMEOUT, "6000"));
-    }
-
-    protected void alert(String title, String message) {
+    /*protected void alert(String title, String message) {
         new AlertDialog.Builder(mContext)
                 .setTitle(title)
                 .setMessage(message)
                 .setNeutralButton("OK", null)
                 .show();
-    }
+    }*/
 }

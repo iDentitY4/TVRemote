@@ -19,29 +19,26 @@ import de.sksystems.tvremote.entity.Channel;
 
 public class ChannelListViewModel extends AndroidViewModel {
 
-    private final LiveData<List<Channel>> mChannelList;
-
     private AppDatabase mAppDatabase;
+
+    private ChannelDao mChannelDao;
 
     public ChannelListViewModel(@NonNull Application application) {
         super(application);
 
         mAppDatabase = AppDatabase.getDatabase(this.getApplication());
-
-        ChannelDao channelDao = mAppDatabase.channelDao();
-        if(PreferenceManager.getDefaultSharedPreferences(getApplication().getApplicationContext())
-                        .getBoolean("fav_only", false)) {
-            mChannelList = channelDao.getAllDistinctMaxQualityFavorites();
-        }
-        else
-        {
-            mChannelList = channelDao.getAllDistinctMaxQuality();
-        }
-
+        mChannelDao = mAppDatabase.channelDao();
     }
 
     public LiveData<List<Channel>> getChannelList() {
-        return mChannelList;
+        if(PreferenceManager.getDefaultSharedPreferences(getApplication().getApplicationContext())
+                .getBoolean("fav_only", false)) {
+            return mChannelDao.getAllDistinctMaxQualityFavorites();
+        }
+        else
+        {
+            return mChannelDao.getAllDistinctMaxQuality();
+        }
     }
 
     public LiveData<List<Channel>> getChannelListIgnoreFavMode() {
