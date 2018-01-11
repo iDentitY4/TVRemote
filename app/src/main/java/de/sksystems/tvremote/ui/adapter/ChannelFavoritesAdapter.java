@@ -47,7 +47,6 @@ public class ChannelFavoritesAdapter extends ArrayAdapter<Channel> {
         public TextView textViewProgram;        // final
         public ImageView imageViewFavorite;     // final
         public ImageView imageViewMove;         // final
-        public int position;                    // variable
         public Channel channel;                 // variable
     }
 
@@ -56,11 +55,18 @@ public class ChannelFavoritesAdapter extends ArrayAdapter<Channel> {
         holder.imageViewFavorite.setImageResource(holder.channel.isFavorite()
                 ? R.drawable.ic_star_accent_24dp
                 : R.drawable.ic_star_border_accent_24dp);
-        holder.imageViewMove.setImageResource(!movingActive || holder.position == positionFrom
-                ? R.drawable.ic_import_export_accent_24dp
-                : holder.position < positionFrom
-                ? R.drawable.ic_reorder_accent_24dp//R.drawable.ic_action_reply
-                : R.drawable.ic_reorder_accent_24dp);//R.drawable.ic_action_reply_inv);
+
+        int res = 0;
+        if(!movingActive || (holder.channel.getOrder() == positionFrom)) {
+            res = R.drawable.ic_import_export_accent_24dp;
+        }
+        else if(holder.channel.getOrder() < positionFrom) {
+            res = R.drawable.ic_reply_accent_24dp;
+        }
+        else {
+            res = R.drawable.ic_reply_all_accent_24dp;
+        }
+        holder.imageViewMove.setImageResource(res);
     }
 
     @Override
@@ -92,6 +98,7 @@ public class ChannelFavoritesAdapter extends ArrayAdapter<Channel> {
                         endMoving(getViewHolder(v));
                 }
             });
+            holder.channel = getItem(position);
             convertView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -105,8 +112,8 @@ public class ChannelFavoritesAdapter extends ArrayAdapter<Channel> {
             // convertView comes from recycling of views being scrolled out of sight
             holder = (ViewHolder)convertView.getTag();
         }
-        holder.position = position;
-        holder.channel = this.getItem(position);
+        //holder.channel.setOrder(position);
+        holder.channel = getItem(position);
         setUiListElement(holder);
         return convertView;
     }
@@ -117,14 +124,14 @@ public class ChannelFavoritesAdapter extends ArrayAdapter<Channel> {
     }
 
     protected void beginMoving(ViewHolder holder) {
-        positionFrom = holder.position;
+        positionFrom = getPosition(holder.channel);
         movingActive = true;
         notifyDataSetChanged();     // triggers refresh of the ListView
-        Toast.makeText(mContext, "Moving...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, "Wähle das Ziel", Toast.LENGTH_SHORT).show();
     }
 
     protected void endMoving(ViewHolder holder) {
-        int positionTo = holder.position;
+        int positionTo = getPosition(holder.channel);
 
         Channel channel = getItem(positionFrom);
         if (positionFrom > positionTo) {
@@ -145,12 +152,14 @@ public class ChannelFavoritesAdapter extends ArrayAdapter<Channel> {
 
         positionFrom = positionNone;
         movingActive = false;
-        notifyDataSetChanged();     // triggers refresh of the ListView
+
 
         Channel[] channels = new Channel[getCount()];
         for(int i = 0; i < getCount(); i++) {
             channels[i] = getItem(i);
+            channels[i].setOrder(i);
         }
+        notifyDataSetChanged();     // triggers refresh of the ListView
 
         new UpdateChannelsTask(getContext()).execute(channels);
     }

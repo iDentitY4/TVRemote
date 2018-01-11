@@ -33,6 +33,9 @@ public class Channel implements Comparable<Channel> {
     @ColumnInfo(name = "favorite")
     private boolean favorite;
 
+    @ColumnInfo(name = "order")
+    private int order;
+
     public int getUid() {
         return uid;
     }
@@ -91,6 +94,14 @@ public class Channel implements Comparable<Channel> {
 
     public void toggleFavorite() {
         favorite = !favorite;
+    }
+
+    public int getOrder() {
+        return order;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
     }
 
     @Override

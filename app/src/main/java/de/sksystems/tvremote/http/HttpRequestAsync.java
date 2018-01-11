@@ -19,38 +19,74 @@ import de.sksystems.tvremote.http.HttpRequest;
 
 public abstract class HttpRequestAsync<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
 
-    public interface RequestListener {
+    public interface BeginListener {
         void onBegin();
+    }
+
+    public interface SuccessListener {
         void onSuccess();
+    }
+
+    public interface FailureListener {
         void onFailure(Exception e);
+    }
+
+    public interface CancelledListener {
+        void onCancelled();
     }
 
     protected HttpRequest http;
 
     protected Exception mError;
 
-    private List<RequestListener> mListeners;
+    private BeginListener mBeginListener;
+    private SuccessListener mSuccessListener;
+    private FailureListener mFailureListener;
+    private CancelledListener mCancelledListener;
 
     public HttpRequestAsync(String ip, int timeout) {
         super();
         http = new HttpRequest(ip, timeout, false);
         mError = null;
-        mListeners = new ArrayList<>();
     }
 
-    public void addRequestListener(RequestListener listener) {
-        mListeners.add(listener);
+    public void setBeginListener(BeginListener mBeginListener) {
+        this.mBeginListener = mBeginListener;
     }
 
-    public void removeRequestListener(RequestListener listener) {
-        mListeners.remove(listener);
+    public void removeBeginListener() {
+        mBeginListener = null;
+    }
+
+    public void setSuccessListener(SuccessListener mSuccessListener) {
+        this.mSuccessListener = mSuccessListener;
+    }
+
+    public void removeSuccessListener() {
+        mSuccessListener = null;
+    }
+
+    public void setFailureListener(FailureListener mFailureListener) {
+        this.mFailureListener = mFailureListener;
+    }
+
+    public void removeFailureListener() {
+        mFailureListener = null;
+    }
+
+    public void setCancelledListener(CancelledListener mCancelledListener) {
+        this.mCancelledListener = mCancelledListener;
+    }
+
+    public void removeCancelledListener() {
+        mCancelledListener = null;
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        for(RequestListener l : mListeners) {
-            l.onBegin();
+        if(mBeginListener != null) {
+            mBeginListener.onBegin();
         }
     }
 
@@ -59,13 +95,22 @@ public abstract class HttpRequestAsync<Params, Progress, Result> extends AsyncTa
         super.onPostExecute(result);
 
         if(mError == null) {
-            for(RequestListener l : mListeners) {
-                l.onSuccess();
+            if(mSuccessListener != null) {
+                mSuccessListener.onSuccess();
             }
         } else {
-            for(RequestListener l : mListeners) {
-                l.onFailure(mError);
+            if(mFailureListener != null) {
+                mFailureListener.onFailure(mError);
             }
+        }
+    }
+
+    @Override
+    protected void onCancelled() {
+        super.onCancelled();
+
+        if(mCancelledListener != null) {
+            mCancelledListener.onCancelled();
         }
     }
 

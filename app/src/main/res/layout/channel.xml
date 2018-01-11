@@ -12,11 +12,12 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
         android:layout_toStartOf="@id/imageViewFavorite"
 
         android:text="@string/channelNotFound"
-        android:textAppearance="@android:style/TextAppearance.Material.Medium" />
+        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        android:textColor="@color/colorTextPrimary" />
 
     <ImageView
         android:id="@+id/imageViewFavorite"

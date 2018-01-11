@@ -21,7 +21,6 @@ import de.sksystems.tvremote.SharedPreferencesKeys;
 import de.sksystems.tvremote.db.AppDatabase;
 import de.sksystems.tvremote.http.HttpRequestAsync;
 import de.sksystems.tvremote.http.HttpRequestScanChannelTask;
-import de.sksystems.tvremote.ui.RemoteModeActivity;
 import de.sksystems.tvremote.util.FragmentClickHandler;
 
 /**
@@ -34,7 +33,7 @@ public class SetupDialogFragment extends DialogFragment implements FragmentClick
         void onSetupCompleted();
     }
 
-    private static final Pattern PATTERN = Pattern.compile(
+    private static final Pattern IP_ADDRESS_PATTERN = Pattern.compile(
             "^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
 
     private SharedPreferences mPreferences;
@@ -95,18 +94,22 @@ public class SetupDialogFragment extends DialogFragment implements FragmentClick
                 int timeout = Integer.parseInt(mPreferences.getString(SharedPreferencesKeys.TV.TIMEOUT, "6000"));
 
                 HttpRequestScanChannelTask task = new HttpRequestScanChannelTask(AppDatabase.getDatabase(getContext()), ip, timeout);
-                task.addRequestListener(new HttpRequestAsync.RequestListener() {
+                task.setBeginListener(new HttpRequestAsync.BeginListener() {
                     @Override
                     public void onBegin() {
                         mBtnChannelScan.setEnabled(false);
                         mProgressChannelScan.setVisibility(View.VISIBLE);
                     }
+                });
 
+                task.setSuccessListener(new HttpRequestAsync.SuccessListener() {
                     @Override
                     public void onSuccess() {
                         mListener.onSetupCompleted();
                     }
+                });
 
+                task.setFailureListener(new HttpRequestAsync.FailureListener() {
                     @Override
                     public void onFailure(Exception e) {
                         mProgressChannelScan.setVisibility(View.GONE);
@@ -120,6 +123,6 @@ public class SetupDialogFragment extends DialogFragment implements FragmentClick
     }
 
     private boolean isValidIp(String value) {
-        return PATTERN.matcher(value).matches();
+        return IP_ADDRESS_PATTERN.matcher(value).matches();
     }
 }

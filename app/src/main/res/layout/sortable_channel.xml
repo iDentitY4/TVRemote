@@ -11,7 +11,8 @@
         android:layout_centerVertical="true"
         android:layout_marginLeft="8dp"
         android:text="Medium Text"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/colorTextPrimary" />
 
     <ImageView
         android:layout_width="48dp"

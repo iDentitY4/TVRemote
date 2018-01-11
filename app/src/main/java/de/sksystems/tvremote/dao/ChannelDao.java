@@ -29,7 +29,8 @@ public interface ChannelDao {
             " FROM channel" +
             " GROUP BY program) cGroup" +
             " ON c.program = cGRoup.program" +
-            " AND c.quality = cGroup.maxQuality")
+            " AND c.quality = cGroup.maxQuality" +
+            " ORDER BY c.`order` ASC")
     LiveData<List<Channel>> getAllDistinctMaxQuality();
 
     @Query("SELECT c.*" +
@@ -40,7 +41,8 @@ public interface ChannelDao {
             " GROUP BY program) cGroup" +
             " ON c.program = cGRoup.program" +
             " AND c.quality = cGroup.maxQuality" +
-            " AND c.favorite = 1")
+            " AND c.favorite = 1" +
+            " ORDER BY c.`order` ASC")
     LiveData<List<Channel>> getAllDistinctMaxQualityFavorites();
 
     @Query("SELECT * FROM channel WHERE uid = :uid")

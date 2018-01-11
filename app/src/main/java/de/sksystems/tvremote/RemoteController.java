@@ -32,6 +32,21 @@ public class RemoteController {
 
     private static final String TV_STATE_FILENAME = "TV_STATE";
 
+    public enum CONTROL {
+        SELECT_CHANNEL,
+        ZOOM_MAIN,
+        ZOOM_PIP,
+        SHOW_PIP,
+        INCREASE_VOLUME,
+        DECREASE_VOLUME,
+        TIME_SHIFT,
+        DEBUG
+    }
+
+    public interface OnControlExecutedListener {
+        void onControlExecuted();
+    }
+
     private static RemoteController instance;
 
     public static RemoteController getInstance(Context context) {
@@ -133,17 +148,7 @@ public class RemoteController {
             int timeout = Integer.parseInt(mPreferences.getString(SharedPreferencesKeys.TV.TIMEOUT, "6000"));
 
             mRunningTask = new HttpRequestParamTask(ip, timeout);
-            mRunningTask.addRequestListener(new HttpRequestAsync.RequestListener() {
-                @Override
-                public void onBegin() {
-
-                }
-
-                @Override
-                public void onSuccess() {
-                    mRunningTask = null;
-                }
-
+            mRunningTask.setFailureListener(new HttpRequestAsync.FailureListener() {
                 @Override
                 public void onFailure(Exception e) {
                     mRunningTask = null;
@@ -156,6 +161,10 @@ public class RemoteController {
         {
             Toast.makeText(mContext, "Bitte warten...", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void control(CONTROL control) {
+
     }
 
     public void selectChannel(Channel channel) {

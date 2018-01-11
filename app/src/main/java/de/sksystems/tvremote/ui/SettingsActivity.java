@@ -1,11 +1,12 @@
 package de.sksystems.tvremote.ui;
 
 import android.annotation.TargetApi;
-import android.app.FragmentManager;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -22,24 +23,16 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import de.sksystems.tvremote.SharedPreferencesKeys;
+import de.sksystems.tvremote.http.HttpRequest;
 import de.sksystems.tvremote.http.HttpRequestAsync;
 import de.sksystems.tvremote.R;
 import de.sksystems.tvremote.RemoteController;
-import de.sksystems.tvremote.dao.ChannelDao;
 import de.sksystems.tvremote.db.AppDatabase;
-import de.sksystems.tvremote.entity.Channel;
 import de.sksystems.tvremote.http.HttpRequestScanChannelTask;
 import de.sksystems.tvremote.ui.component.LoadingPreference;
-import de.sksystems.tvremote.ui.component.ScanChannelsTaskFragment;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -216,9 +209,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class ChannelsPreferenceFragment extends PreferenceFragment {
-        private HttpRequestScanChannelTask task;
-
-        private ProgressBar progress;
+        private HttpRequestScanChannelTask runningTask;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -227,49 +218,67 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             setHasOptionsMenu(true);
 
             final LoadingPreference channelScan = (LoadingPreference) findPreference("scan_channels");
-
             channelScan.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    if(task == null) {
+                    if(runningTask != null) {
+                        return false;
+                    }
+                    else
+                    {
                         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getContext());
                         String ip = pref.getString(SharedPreferencesKeys.TV.IP, null);
                         int timeout = Integer.parseInt(pref.getString(SharedPreferencesKeys.TV.TIMEOUT, "6000"));
 
-                        task = new HttpRequestScanChannelTask(AppDatabase.getDatabase(getContext()), ip, timeout);
-                        task.addRequestListener(new HttpRequestAsync.RequestListener() {
+                        final ProgressBar channelScanProgress = channelScan.getProgressBar();
+
+                        runningTask = new HttpRequestScanChannelTask(AppDatabase.getDatabase(getContext()), ip, timeout);
+                        runningTask.setBeginListener(new HttpRequestAsync.BeginListener() {
                             @Override
                             public void onBegin() {
-                                progress.setVisibility(View.VISIBLE);
-                            }
-
-                            @Override
-                            public void onSuccess() {
-                                progress.setVisibility(View.GONE);
-                            }
-
-                            @Override
-                            public void onFailure(Exception e) {
-                                progress.setVisibility(View.GONE);
-                                Toast.makeText(getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                                channelScanProgress.setVisibility(View.VISIBLE);
                             }
                         });
-                        task.execute(new Void[]{});
+
+                        runningTask.setSuccessListener(new HttpRequestAsync.SuccessListener() {
+                            @Override
+                            public void onSuccess() {
+                                runningTask = null;
+                                channelScanProgress.setVisibility(View.GONE);
+                            }
+                        });
+
+                        runningTask.setFailureListener(new HttpRequestAsync.FailureListener() {
+                            @Override
+                            public void onFailure(Exception e) {
+                                runningTask = null;
+                                channelScanProgress.setVisibility(View.GONE);
+                                Toast.makeText(getContext().getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                        runningTask.setCancelledListener(new HttpRequestAsync.CancelledListener() {
+                            @Override
+                            public void onCancelled() {
+                                runningTask = null;
+                                channelScanProgress.setVisibility(View.GONE);
+                                Toast.makeText(getContext().getApplicationContext(), "Vorgang abgebrochen", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        runningTask.execute(new Void[]{});
                         return true;
-                    }
-                    else
-                    {
-                        return false;
                     }
                 }
             });
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            View v = super.onCreateView(inflater, container, savedInstanceState);
-            progress = v.findViewById(R.id.progress);
-            return v;
+        public void onDestroy() {
+            super.onDestroy();
+
+            if(runningTask != null) {
+                runningTask.cancel(true);
+            }
         }
 
         @Override

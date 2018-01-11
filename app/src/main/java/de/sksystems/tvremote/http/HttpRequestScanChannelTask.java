@@ -6,7 +6,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.sksystems.tvremote.dao.ChannelDao;
 import de.sksystems.tvremote.db.AppDatabase;
@@ -39,6 +41,7 @@ public class HttpRequestScanChannelTask extends HttpRequestAsync<Void, Integer, 
 
         try {
             JSONArray channelArray = result.getJSONArray("channels");
+            Map<String, Integer> qualityMap = new HashMap<>();
 
             for (int i = 0; i < channelArray.length(); i++) {
                 JSONObject jChannel = channelArray.getJSONObject(i);
@@ -50,11 +53,23 @@ public class HttpRequestScanChannelTask extends HttpRequestAsync<Void, Integer, 
                 channel.setProgram(jChannel.getString("program"));
                 channel.setProvider(jChannel.getString("provider"));
 
-                channels.add(channel);
+                if(qualityMap.containsKey(channel.getProgram())) {
+                    if(qualityMap.get(channel.getProgram()) < channel.getQuality()) {
+                        channels.add(channel);
+                    }
+                } else {
+                    qualityMap.put(channel.getProgram(), channel.getQuality());
+                    channels.add(channel);
+                }
             }
         } catch (JSONException ex) {
             mError = ex;
             return null;
+        }
+
+        //Set order of list elements for sorting favorites later on
+        for(int index = 0; index < channels.size(); index++) {
+            channels.get(index).setOrder(index);
         }
 
         mDao.deleteAll();

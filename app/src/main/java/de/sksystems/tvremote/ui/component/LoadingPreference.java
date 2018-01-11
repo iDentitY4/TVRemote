@@ -16,7 +16,7 @@ import de.sksystems.tvremote.entity.Channel;
  * Created by Manuel on 30.12.2017.
  */
 
-public class LoadingPreference extends Preference implements TaskFragment.TaskCallbacks{
+public class LoadingPreference extends Preference {
 
     private ProgressBar mProgress;
 
@@ -43,29 +43,7 @@ public class LoadingPreference extends Preference implements TaskFragment.TaskCa
         return view;
     }
 
-    @Override
-    public void onPreExecute() {
-        if(mProgress != null) {
-            mProgress.setVisibility(View.VISIBLE);
-        }
-    }
-
-    @Override
-    public void onProgressUpdate() {
-
-    }
-
-    @Override
-    public void onCancelled() {
-        if(mProgress != null) {
-            mProgress.setVisibility(View.GONE);
-        }
-    }
-
-    @Override
-    public void onPostExecute() {
-        if(mProgress != null) {
-            mProgress.setVisibility(View.GONE);
-        }
+    public ProgressBar getProgressBar() {
+        return mProgress;
     }
 }

@@ -60,16 +60,7 @@ public abstract class RemoteModeActivity extends AppCompatActivity implements Se
     private boolean mSetup = false;
     private SetupDialogFragment mSetupFragment;
 
-    protected HttpRequestAsync.RequestListener mRequestListener = new HttpRequestAsync.RequestListener() {
-        @Override
-        public void onBegin() {
-
-        }
-
-        @Override
-        public void onSuccess() {
-
-        }
+    protected HttpRequestAsync.FailureListener mFailureListener = new HttpRequestAsync.FailureListener() {
 
         @Override
         public void onFailure(Exception e) {
@@ -104,7 +95,7 @@ public abstract class RemoteModeActivity extends AppCompatActivity implements Se
 
         mRemoteControl = RemoteController.getInstance(this);
         if(mRemoteControl.getRunningTask() != null) {
-            mRemoteControl.getRunningTask().addRequestListener(mRequestListener);
+            mRemoteControl.getRunningTask().setFailureListener(mFailureListener);
         }
 
         mControlBarClickHandler = (ControlBarFragment) getFragmentManager().findFragmentById(R.id.control_bar_easy);
@@ -133,7 +124,7 @@ public abstract class RemoteModeActivity extends AppCompatActivity implements Se
         super.onDestroy();
 
         if(mRemoteControl.getRunningTask() != null) {
-            mRemoteControl.getRunningTask().removeRequestListener(mRequestListener);
+            mRemoteControl.getRunningTask().removeFailureListener();
         }
     }
 
