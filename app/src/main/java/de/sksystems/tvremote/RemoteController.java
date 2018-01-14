@@ -32,20 +32,7 @@ public class RemoteController {
 
     private static final String TV_STATE_FILENAME = "TV_STATE";
 
-    public enum CONTROL {
-        SELECT_CHANNEL,
-        ZOOM_MAIN,
-        ZOOM_PIP,
-        SHOW_PIP,
-        INCREASE_VOLUME,
-        DECREASE_VOLUME,
-        TIME_SHIFT,
-        DEBUG
-    }
-
-    public interface OnControlExecutedListener {
-        void onControlExecuted();
-    }
+    private static final String SELECT_CHANNEL = "channelMain=";
 
     private static RemoteController instance;
 
@@ -151,8 +138,20 @@ public class RemoteController {
             mRunningTask.setFailureListener(new HttpRequestAsync.FailureListener() {
                 @Override
                 public void onFailure(Exception e) {
-                    mRunningTask = null;
+                    removeRunningTask();
                     Toast.makeText(mContext, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+            mRunningTask.setSuccessListener(new HttpRequestAsync.SuccessListener() {
+                @Override
+                public void onSuccess() {
+                    removeRunningTask();
+                }
+            });
+            mRunningTask.setCancelledListener(new HttpRequestAsync.CancelledListener() {
+                @Override
+                public void onCancelled() {
+                    removeRunningTask();
                 }
             });
             mRunningTask.execute(new String[]{request});
@@ -163,8 +162,8 @@ public class RemoteController {
         }
     }
 
-    public void control(CONTROL control) {
-
+    private void removeRunningTask() {
+        mRunningTask = null;
     }
 
     public void selectChannel(Channel channel) {
