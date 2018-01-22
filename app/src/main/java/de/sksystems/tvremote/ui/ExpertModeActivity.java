@@ -25,7 +25,6 @@ public class ExpertModeActivity extends RemoteModeActivity {
         super.onCreate(savedInstanceState);
 
         mAdvancedControlBarClickHandler = (AdvancedControlBarFragment) getFragmentManager().findFragmentById(R.id.control_bar_expert);
-        ((ToggleButton) findViewById(R.id.control_pip)).setChecked(mRemoteControl.getTVState().isPip());
     }
 
     @Override
@@ -71,6 +70,13 @@ public class ExpertModeActivity extends RemoteModeActivity {
 
     public void onAdvancedControlBarItemClick(View v) {
         mAdvancedControlBarClickHandler.onClick(v);
+    }
+
+    @Override
+    public void updateControlbar() {
+        super.updateControlbar();
+
+        ((ToggleButton)findViewById(R.id.control_pip)).setChecked(mRemoteControl.getTVState().isPip());
     }
 
     public static class AdvancedControlBarFragment extends Fragment implements FragmentClickHandler {

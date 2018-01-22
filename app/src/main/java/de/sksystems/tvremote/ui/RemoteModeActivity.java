@@ -100,9 +100,7 @@ public abstract class RemoteModeActivity extends AppCompatActivity implements Se
 
         mControlBarClickHandler = (ControlBarFragment) getFragmentManager().findFragmentById(R.id.control_bar_easy);
 
-        LinearLayout easy_toolbar = findViewById(R.id.control_bar_easy);
-        ToggleButton btnTimeshift = easy_toolbar.findViewById(R.id.control_timeshift);
-        btnTimeshift.setChecked(mRemoteControl.getTVState().isTimeShift());
+        updateControlbar();
     }
 
     @Override
@@ -117,6 +115,7 @@ public abstract class RemoteModeActivity extends AppCompatActivity implements Se
         super.onResume();
 
         mChannelListViewModel.getChannelList().observe(this, mViewModelObserver);
+        updateControlbar();
     }
 
     @Override
@@ -176,6 +175,10 @@ public abstract class RemoteModeActivity extends AppCompatActivity implements Se
         if(mSetupFragment != null) {
             mSetupFragment.onClick(v);
         }
+    }
+
+    public void updateControlbar() {
+        ((ToggleButton)findViewById(R.id.control_timeshift)).setChecked(mRemoteControl.getTVState().isTimeShift());
     }
 
     public static class ControlBarFragment extends Fragment implements FragmentClickHandler {

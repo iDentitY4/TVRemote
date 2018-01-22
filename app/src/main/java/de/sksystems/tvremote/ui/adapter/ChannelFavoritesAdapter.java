@@ -62,9 +62,11 @@ public class ChannelFavoritesAdapter extends ArrayAdapter<Channel> {
         }
         else if(holder.channel.getOrder() < positionFrom) {
             res = R.drawable.ic_reply_accent_24dp;
+            holder.imageViewMove.setScaleY(1);
         }
         else {
-            res = R.drawable.ic_reply_all_accent_24dp;
+            res = R.drawable.ic_reply_accent_24dp;
+            holder.imageViewMove.setScaleY(-1);
         }
         holder.imageViewMove.setImageResource(res);
     }

@@ -17,12 +17,15 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.function.Consumer;
 
 import de.sksystems.tvremote.entity.Channel;
 import de.sksystems.tvremote.dao.ChannelDao;
 import de.sksystems.tvremote.db.AppDatabase;
 import de.sksystems.tvremote.http.HttpRequestAsync;
 import de.sksystems.tvremote.http.HttpRequestParamTask;
+import de.sksystems.tvremote.ui.RemoteModeActivity;
+import de.sksystems.tvremote.util.Callable;
 
 /**
  * Created by Manuel on 07.12.2017.
@@ -129,7 +132,7 @@ public class RemoteController {
         return mContext;
     }
 
-    private void httpRequest(String request) {
+    private void httpRequest(String request, final Callable onSuccessCallable) {
         if(mRunningTask == null) {
             String ip = mPreferences.getString(SharedPreferencesKeys.TV.IP, null);
             int timeout = Integer.parseInt(mPreferences.getString(SharedPreferencesKeys.TV.TIMEOUT, "6000"));
@@ -140,18 +143,24 @@ public class RemoteController {
                 public void onFailure(Exception e) {
                     removeRunningTask();
                     Toast.makeText(mContext, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    updateActivityControlbar();
                 }
             });
             mRunningTask.setSuccessListener(new HttpRequestAsync.SuccessListener() {
                 @Override
                 public void onSuccess() {
                     removeRunningTask();
+                    if(onSuccessCallable != null) {
+                        onSuccessCallable.call();
+                    }
+                    updateActivityControlbar();
                 }
             });
             mRunningTask.setCancelledListener(new HttpRequestAsync.CancelledListener() {
                 @Override
                 public void onCancelled() {
                     removeRunningTask();
+                    updateActivityControlbar();
                 }
             });
             mRunningTask.execute(new String[]{request});
@@ -162,67 +171,107 @@ public class RemoteController {
         }
     }
 
+    private void updateActivityControlbar() {
+        if(mContext instanceof RemoteModeActivity) {
+            ((RemoteModeActivity) mContext).updateControlbar();
+        }
+    }
+
     private void removeRunningTask() {
         mRunningTask = null;
     }
 
     public void selectChannel(Channel channel) {
         if (tvState.pip) {
-            httpRequest("channelPip=" + channel.getChannel());
+            httpRequest("channelPip=" + channel.getChannel(), null);
         } else {
-            httpRequest("channelMain=" + channel.getChannel());
+            httpRequest("channelMain=" + channel.getChannel(), null);
         }
     }
 
     public void zoomMain() {
         if (tvState.pip) {
-            httpRequest("zoomPip=" + (tvState.pip ? 1 : 0));
-            tvState.pipZoom = !tvState.pipZoom;
+            httpRequest("zoomPip=" + (tvState.pipZoom ? 0 : 1), new Callable() {
+                @Override
+                public void call() {
+                    tvState.pipZoom = !tvState.pipZoom;
+                }
+            });
         } else {
-            httpRequest("zoomMain=" + (tvState.zoom ? 1 : 0));
-            tvState.zoom = !tvState.zoom;
+            httpRequest("zoomMain=" + (tvState.zoom ? 0 : 1), new Callable() {
+                @Override
+                public void call() {
+                    tvState.zoom = !tvState.zoom;
+                }
+            });
         }
     }
 
-    public void showPip(boolean show) {
-        tvState.pip = show;
-        httpRequest("showPip=" + (show ? 1 : 0));
+    public void showPip(final boolean show) {
+        httpRequest("showPip=" + (show ? 1 : 0), new Callable() {
+            @Override
+            public void call() {
+                tvState.pip = show;
+            }
+        });
     }
 
     public void increaseVolume() {
-        tvState.volume += 10;
+        final int newVolume = Math.min(tvState.volume + 10, 100);
 
-        if(tvState.volume >= 100) {
-            tvState.volume = 100;
-        }
-
-        httpRequest("volume=" + tvState.volume);
+        httpRequest("volume=" + newVolume, new Callable() {
+            @Override
+            public void call() {
+                tvState.volume = newVolume;
+            }
+        });
     }
 
     public void decreaseVolume() {
-        tvState.volume -= 10;
+        final int newVolume = Math.max(tvState.volume - 10, 0);
 
-        if(tvState.volume < 0) {
-            tvState.volume = 0;
-        }
-
-        httpRequest("volume=" + tvState.volume);
+        httpRequest("volume=" + newVolume, new Callable() {
+            @Override
+            public void call() {
+                tvState.volume = newVolume;
+            }
+        });
     }
 
-    public void timeShift(boolean on) {
-        tvState.timeShift = on;
-        if(on) {
-            httpRequest("timeShiftPause=");
-        }
-        else
-        {
-            httpRequest("timeShiftPlay=1");
+    public void timeShift(final boolean on) {
+
+        boolean isTimeShift = tvState.timeShift;
+        if(on && !isTimeShift) {
+            //Begin timeshift
+            httpRequest("timeShiftPause=", new Callable() {
+                @Override
+                public void call() {
+                    tvState.timeShift = on;
+                    tvState.timeShiftStart = System.currentTimeMillis();
+                }
+            });
+
+        } else if(!on && isTimeShift) {
+            //Stop timeshift
+            long durationMilliseconds = System.currentTimeMillis() - tvState.timeShiftStart;
+            long durationSeconds = durationMilliseconds / 1000;
+            httpRequest("timeShiftPlay=" + durationSeconds, new Callable() {
+                @Override
+                public void call() {
+                    tvState.timeShift = on;
+                    tvState.timeShiftStart = -1;
+                }
+            });
         }
     }
 
-    public void debug(boolean on) {
-        tvState.debug = on;
-        httpRequest("debug=" + (tvState.debug ? 1 : 0));
+    public void debug(final boolean on) {
+        httpRequest("debug=" + (tvState.debug ? 0 : 1), new Callable() {
+            @Override
+            public void call() {
+                tvState.debug = on;
+            }
+        });
     }
 
     public static class TVState implements Serializable {
@@ -231,6 +280,7 @@ public class RemoteController {
         boolean pipZoom;
         int volume;
         boolean timeShift;
+        long timeShiftStart;
         boolean debug;
 
         TVState() {
@@ -239,6 +289,7 @@ public class RemoteController {
             pipZoom = false;
             volume = 0;
             timeShift = false;
+            timeShiftStart = 0L;
             debug = false;
         }
 

@@ -209,6 +209,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class ChannelsPreferenceFragment extends PreferenceFragment {
+
+        private static ChannelsPreferenceFragment active;
+
         private HttpRequestScanChannelTask runningTask;
 
         @Override
@@ -216,6 +219,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_channels);
             setHasOptionsMenu(true);
+
+            active = this;
 
             final LoadingPreference channelScan = (LoadingPreference) findPreference("scan_channels");
             channelScan.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -243,26 +248,32 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         runningTask.setSuccessListener(new HttpRequestAsync.SuccessListener() {
                             @Override
                             public void onSuccess() {
-                                runningTask = null;
-                                channelScanProgress.setVisibility(View.GONE);
+                                if(active != null) {
+                                    runningTask = null;
+                                    channelScanProgress.setVisibility(View.GONE);
+                                }
                             }
                         });
 
                         runningTask.setFailureListener(new HttpRequestAsync.FailureListener() {
                             @Override
                             public void onFailure(Exception e) {
-                                runningTask = null;
-                                channelScanProgress.setVisibility(View.GONE);
-                                Toast.makeText(getContext().getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                                if(active != null) {
+                                    runningTask = null;
+                                    channelScanProgress.setVisibility(View.GONE);
+                                    Toast.makeText(active.getContext().getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                                }
                             }
                         });
 
                         runningTask.setCancelledListener(new HttpRequestAsync.CancelledListener() {
                             @Override
                             public void onCancelled() {
-                                runningTask = null;
-                                channelScanProgress.setVisibility(View.GONE);
-                                Toast.makeText(getContext().getApplicationContext(), "Vorgang abgebrochen", Toast.LENGTH_SHORT).show();
+                                if(active != null) {
+                                    runningTask = null;
+                                    channelScanProgress.setVisibility(View.GONE);
+                                    Toast.makeText(active.getContext().getApplicationContext(), "Vorgang abgebrochen", Toast.LENGTH_SHORT).show();
+                                }
                             }
                         });
                         runningTask.execute(new Void[]{});
@@ -279,6 +290,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             if(runningTask != null) {
                 runningTask.cancel(true);
             }
+
+            active = null;
         }
 
         @Override
